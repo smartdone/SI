@@ -5,6 +5,8 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -30,11 +32,15 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.mylhyl.superdialog.SuperDialog;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,7 +52,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import top.smartdone.si.R;
 import top.smartdone.si.core.Config;
+import top.smartdone.si.core.Global;
 import top.smartdone.si.user.User;
+import top.smartdone.si.util.CryptUtil;
+import top.smartdone.si.util.EncodeUtils;
+import top.smartdone.si.util.SharedPreferencesUtils;
 
 import static android.Manifest.permission.READ_CONTACTS;
 
@@ -327,13 +337,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             try {
                 User user = new User();
                 user.setName(mEmail);
-                user.setPasswd(mPassword);
+                user.setPasswd(CryptUtil.encryptPsw(mPassword));
                 Gson gson = new Gson();
                 String jsonstr = gson.toJson(user);
+//                jsonstr = EncodeUtils.unicodeToString(jsonstr);
                 Log.d(TAG, "parm: " + jsonstr);
                 MediaType TJSON = MediaType.parse("application/json; charset=utf-8");
                 RequestBody body = RequestBody.create(TJSON, jsonstr);
-                Request request = new Request.Builder().url(Config.HOST + Config.REGISTER).put(body).build();
+                Request request = new Request.Builder().url(Config.HOST + Config.LOGIN).put(body).build();
                 OkHttpClient okHttpClient = new OkHttpClient();
                 Call call = okHttpClient.newCall(request);
                 Response response = call.execute();
@@ -342,9 +353,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 JSONObject jsonObject = new JSONObject(rspstr);
                 if(jsonObject.getBoolean("success")) {
                     Log.d(TAG, "success");
+                    Global.token = jsonObject.getString("content");
+                    SharedPreferencesUtils.setParam(LoginActivity.this, Config.TOKEN, Global.token);
                     return true;
-                } else {
-                    Log.d(TAG, "failer");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -362,8 +373,90 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 finish();
                 startActivity(new Intent(LoginActivity.this, SIMainActivity.class));
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
-                mPasswordView.requestFocus();
+//                mPasswordView.setError(getString(R.string.error_incorrect_password));
+//                mPasswordView.requestFocus();
+                new SuperDialog.Builder(LoginActivity.this).setRadius(10)
+                        .setTitle("注册").setMessage("是否使用输入的信息进行注册？")
+                        .setPositiveButton("确定", new SuperDialog.OnClickPositiveListener() {
+                            @Override
+                            public void onClick(View v) {
+                                try {
+                                    User user = new User();
+                                    user.setName(mEmail);
+                                    user.setPasswd(CryptUtil.encryptPsw(mPassword));
+                                    Gson gson = new Gson();
+                                    String jsonstr = gson.toJson(user);
+                                    Log.d(TAG, "parm: " + jsonstr);
+                                    Handler handler = new Handler(){
+                                        @Override
+                                        public void handleMessage(Message msg) {
+                                            super.handleMessage(msg);
+                                            if(msg.what == 0) {
+                                                finish();
+                                                startActivity(new Intent(LoginActivity.this, SIMainActivity.class));
+                                            }
+
+                                            if(msg.what == 1) {
+                                                Toast.makeText(LoginActivity.this, (String)msg.obj, Toast.LENGTH_LONG).show();
+                                            }
+                                        }
+                                    };
+                                    new RegisterUser(jsonstr, handler).start();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        })
+                        .setNegativeButton("取消", new SuperDialog.OnClickNegativeListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                            }
+                        })
+                        .build();
+            }
+        }
+
+        class RegisterUser extends Thread{
+            private Handler handler;
+            private String jsonstr;
+            public RegisterUser(String jsonstr, Handler handler) {
+                this.handler = handler;
+                this.jsonstr = jsonstr;
+            }
+
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    register(jsonstr, handler);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        private void register(String jsonstr, Handler handler) throws IOException, JSONException {
+//            jsonstr = EncodeUtils.unicodeToString(jsonstr);
+            MediaType TJSON = MediaType.parse("application/json; charset=utf-8");
+            RequestBody body = RequestBody.create(TJSON, jsonstr);
+            Request request = new Request.Builder().url(Config.HOST + Config.REGISTER).put(body).build();
+            OkHttpClient okHttpClient = new OkHttpClient();
+            Call call = okHttpClient.newCall(request);
+            Response response = call.execute();
+            String rspstr = response.body().string();
+            Log.d(TAG, rspstr);
+            JSONObject jsonObject = new JSONObject(rspstr);
+            if(jsonObject.getBoolean("success")) {
+                Message message = new Message();
+                message.what = 0;
+                message.obj = jsonObject.getString("content");
+                handler.sendMessage(message);
+            } else {
+                Message message = new Message();
+                message.what = 1;
+                message.obj = jsonObject.getString("content");
+                handler.sendMessage(message);
             }
         }
 

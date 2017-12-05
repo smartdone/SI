@@ -31,4 +31,5 @@ dependencies {
     compile 'com.github.huzhenjie:ImageSelector:1.0.3'
     compile 'com.squareup.okhttp3:okhttp:3.3.0'
     compile 'com.google.code.gson:gson:2.6.2'
+    compile 'com.mylhyl:superDialog:1.2.1'
 }
