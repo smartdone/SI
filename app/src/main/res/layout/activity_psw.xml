@@ -18,7 +18,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
-    <Button
+    <com.blanke.lib.ProgressButton
         android:text="@string/ok"
         android:id="@+id/psw_btn_ok"
         android:layout_width="match_parent"

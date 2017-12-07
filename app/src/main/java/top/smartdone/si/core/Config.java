@@ -9,6 +9,7 @@ public class Config {
     public static String REGISTER = "user/register";
     public static String LOGIN = "user/login";
     public static String PUSH = "key/add";
+    public static String GET = "key/get";
     public static String STOREPATH = "/sdcard/si";
     public static String KEY = "sfeiu4gj%^$#*&sn";
     public static String TOKEN = "usertoken";
