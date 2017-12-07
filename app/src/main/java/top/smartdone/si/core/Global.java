@@ -6,4 +6,5 @@ package top.smartdone.si.core;
 
 public class Global {
     public static String token = "";
+    public static String password = "";
 }

@@ -371,7 +371,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
             if (success) {
                 finish();
-                startActivity(new Intent(LoginActivity.this, SIMainActivity.class));
+                startActivity(new Intent(LoginActivity.this, PswActivity.class));
             } else {
 //                mPasswordView.setError(getString(R.string.error_incorrect_password));
 //                mPasswordView.requestFocus();
@@ -392,8 +392,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                         public void handleMessage(Message msg) {
                                             super.handleMessage(msg);
                                             if(msg.what == 0) {
-                                                finish();
-                                                startActivity(new Intent(LoginActivity.this, SIMainActivity.class));
+                                                Toast.makeText(LoginActivity.this, "注册成功，登录吧", Toast.LENGTH_LONG).show();
                                             }
 
                                             if(msg.what == 1) {

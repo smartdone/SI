@@ -22,4 +22,6 @@
     <string name="decrypt">还原图片</string>
     <string name="encimg">加密图片</string>
     <string name="decimg">解密图片</string>
+    <string name="pwddesc">注意：此密码将用于您的文件加密，请妥善保管此密码，我们也会为您同步到云端。（密码长度要求为16位，不足16位的我们将为您填充0，超过16位的我们只取前16位）</string>
+    <string name="ok">确定</string>
 </resources>
